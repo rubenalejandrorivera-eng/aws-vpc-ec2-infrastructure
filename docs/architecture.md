@@ -1,23 +1,13 @@
-# AWS VPC and EC2 infrastructure
 
-## 1. Project overview
+# AWS Infrastructure Architecture
 
-This project designs and deploys a basic AWS network using Amazon VPC and EC2. The goal is to learn how cloud networking works, how resources communicate, and how to expose a web server to the internet securely.
+## Network Overview
 
-## 2. Architecture design
+The infrastructure uses an Amazon VPC with the CIDR block `10.0.0.0/16`, distributed across two Availability Zones.
 
-The planned architecture has:
+## Network Components
 
-- One Amazon VPC spanning two Availability Zones.
-- Two public subnets and two private subnets.
-- One Internet Gateway.
-- Route tables for public and private traffic.
-- Security groups that control inbound and outbound traffic.
-- An EC2 instance running a web server.
-
-## 3. Network configuration
-
-| Resource | CIDR Block |
+| Component | CIDR / Configuration |
 |---|---|
 | VPC | 10.0.0.0/16 |
 | Public Subnet A | 10.0.0.0/24 |
@@ -25,39 +15,31 @@ The planned architecture has:
 | Public Subnet B | 10.0.2.0/24 |
 | Private Subnet B | 10.0.3.0/24 |
 
-## 4. Network components
+## Routing
 
-### Amazon VPC
-An isolated virtual network where AWS resources can communicate.
+- An Internet Gateway is attached to the VPC.
+- The public route table includes a default route (`0.0.0.0/0`) to the Internet Gateway.
+- Both public subnets are associated with the public route table.
+- Both private subnets are associated with a separate private route table.
+- The private route table contains only the local VPC route.
 
-### Public subnets
-Host resources that need direct internet access through the Internet Gateway.
+## Compute
 
-### Private subnets
-Host resources that should not be reachable directly from the public internet.
+One Amazon EC2 instance runs Amazon Linux 2023 in Public Subnet A.
 
-### Internet Gateway
-Connects public subnet resources to the internet, within the limits of routing and security rules.
+Apache HTTP Server was installed to host a publicly accessible web page.
 
-### Route tables
-Define how traffic is directed between subnets and external networks.
+## Security
 
-### Security groups
-Virtual firewalls that control traffic entering and leaving AWS resources.
+The EC2 Security Group uses these inbound rules:
 
-## 5. Compute layer
+- SSH (TCP 22): restricted to the administrator's IP address.
+- HTTP (TCP 80): accessible from the internet.
 
-An EC2 instance will run Apache as the web server. It uses Amazon Linux 2023, and a User Data script automates the initial server setup.
+## Cost Considerations
 
-## 6. Security considerations
+No NAT Gateway was deployed to avoid additional infrastructure costs. Private subnets therefore do not have direct IPv4 internet access.
 
-- Apply the principle of least privilege.
-- Restrict SSH access to a trusted IP address.
-- Allow HTTP traffic only when required.
-- Avoid exposing private resources directly to the internet.
-- Review security group rules before deployment.
+## Design Limitations
 
-
-## 8. Deployment status
-
-This document covers the planned architecture only. Deployed resources and implementation evidence will be documented separately as the project progresses.
+Only one EC2 instance was deployed. The second Availability Zone and private subnets are included in the network design, but a multi-instance highly available application was not implemented.
